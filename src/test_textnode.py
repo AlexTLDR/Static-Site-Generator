@@ -1,6 +1,13 @@
 import unittest
 
-from textnode import TextNode, TextType, split_nodes_delimiter
+from textnode import (
+    TextNode,
+    TextType,
+    split_nodes_delimiter,
+    text_node_to_html_node,
+    extract_markdown_images,
+    extract_markdown_links
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -115,6 +122,39 @@ class TestTextNode(unittest.TestCase):
         node = TextNode("", TextType.TEXT)
         new_nodes = split_nodes_delimiter([node], "*", TextType.ITALIC)
         self.assertEqual(new_nodes, [TextNode("", TextType.TEXT)])
+
+    def test_extract_markdown_images(self):
+        text = "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and ![another](https://i.imgur.com/dfsdkjfd.png)"
+        self.assertEqual(
+            extract_markdown_images(text),
+            [
+                ("image", "https://i.imgur.com/zjjcJKZ.png"),
+                ("another", "https://i.imgur.com/dfsdkjfd.png")
+            ]
+        )
+
+    def test_extract_markdown_images_empty(self):
+        text = "This is text with no images"
+        self.assertEqual(extract_markdown_images(text), [])
+
+    def test_extract_markdown_links(self):
+        text = "This is text with a [link](https://www.boot.dev) and [another link](https://www.github.com)"
+        self.assertEqual(
+            extract_markdown_links(text),
+            [
+                ("link", "https://www.boot.dev"),
+                ("another link", "https://www.github.com")
+            ]
+        )
+
+    def test_extract_markdown_links_empty(self):
+        text = "This is text with no links"
+        self.assertEqual(extract_markdown_links(text), [])
+
+    def test_extract_markdown_mixed(self):
+        text = "This has ![image](https://imgur.com) and [link](https://boot.dev)"
+        self.assertEqual(extract_markdown_images(text), [("image", "https://imgur.com")])
+        self.assertEqual(extract_markdown_links(text), [("link", "https://boot.dev")])
 
 
 
