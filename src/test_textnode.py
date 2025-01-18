@@ -407,6 +407,54 @@ def test_block_to_block_type_mixed_list_markers(self):
         "unordered_list"
     )
 
+def test_extract_title(self):
+    markdown = """# My Title
+This is a paragraph.
+## Subtitle
+Another paragraph."""
+    self.assertEqual(extract_title(markdown), "My Title")
+
+def test_extract_title_no_header(self):
+    markdown = """This is a paragraph.
+Another paragraph."""
+    with self.assertRaises(ValueError):
+        extract_title(markdown)
+
+def test_extract_title_multiple_headers(self):
+    markdown = """# First Title
+## Second Title
+# Another Title"""
+    self.assertEqual(extract_title(markdown), "First Title")
+
+
+def create_heading(text):
+    level = text.count("#")
+    content = text[level:].strip()
+    return HTMLNode(f"h{level}", None, text_to_children(content))
+
+def create_quote_block(text):
+    lines = [line.strip("> ").strip() for line in text.split("\n")]
+    content = " ".join(lines)
+    return HTMLNode("blockquote", None, text_to_children(content))
+
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    children = []
+    for block in blocks:
+        if block.startswith("#"):
+            children.append(create_heading(block))
+        elif block.startswith("```"):
+            children.append(create_code_block(block))
+        elif block.startswith(">"):
+            children.append(create_quote_block(block))
+        elif block.startswith("* ") or block.startswith("- "):
+            children.append(create_unordered_list(block))
+        elif block[0].isdigit() and block[1] == ".":
+            children.append(create_ordered_list(block))
+        else:
+            children.append(create_paragraph(block))
+    return HTMLNode("div", None, children)
 
 
 if __name__ == "__main__":
