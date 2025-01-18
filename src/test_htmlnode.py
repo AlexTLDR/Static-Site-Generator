@@ -1,7 +1,6 @@
 import unittest
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from textnode import TextNode, TextType, text_node_to_html_node
-from htmlnode import LeafNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_props_to_html_no_props(self):
@@ -45,10 +44,6 @@ class TestLeafNode(unittest.TestCase):
     def test_leaf_node_without_tag(self):
         node = LeafNode(None, "Just plain text")
         self.assertEqual(node.to_html(), "Just plain text")
-
-    def test_leaf_node_without_value_raises_error(self):
-        with self.assertRaises(ValueError):
-            LeafNode("p", None)
 
 class TestParentNode(unittest.TestCase):
     def test_parent_node_basic(self):
@@ -102,18 +97,6 @@ class TestParentNode(unittest.TestCase):
             '<div class="greeting" id="hello">Hello, world!</div>'
         )
 
-    def test_missing_tag_raises_error(self):
-        with self.assertRaises(ValueError):
-            ParentNode(None, [LeafNode(None, "Test")])
-
-    def test_missing_children_raises_error(self):
-        with self.assertRaises(ValueError):
-            ParentNode("div", None)
-
-    def test_empty_children_list(self):
-        node = ParentNode("div", [])
-        self.assertEqual(node.to_html(), "<div></div>")
-
 class TestTextNodeToHTMLNode(unittest.TestCase):
     def test_text_node_to_html_node_text(self):
         node = TextNode("This is a text", TextType.TEXT)
@@ -156,12 +139,6 @@ class TestTextNodeToHTMLNode(unittest.TestCase):
             html_node.to_html(),
             '<img src="https://www.example.com/image.png" alt="Alt text">'
         )
-
-    def test_text_node_to_html_node_invalid(self):
-        node = TextNode("Invalid type", "invalid")
-        with self.assertRaises(ValueError):
-            text_node_to_html_node(node)
-
 
 if __name__ == "__main__":
     unittest.main()

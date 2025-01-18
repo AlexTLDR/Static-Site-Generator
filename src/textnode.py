@@ -1,7 +1,7 @@
 from enum import Enum
 import re
 
-from htmlnode import LeafNode
+from htmlnode import *
 
 class TextType(Enum):
     TEXT = "text"
@@ -168,3 +168,63 @@ def block_to_block_type(block):
             
     # Default case - paragraph
     return "paragraph"
+
+def text_to_children(text):
+    """Convert text with inline markdown to HTMLNode children"""
+    nodes = text_to_textnodes(text)
+    return [text_node_to_html_node(node) for node in nodes]
+
+def create_paragraph(text):
+    return HTMLNode("p", None, text_to_children(text))
+
+def create_heading(text):
+    level = text.count("#")
+    content = text[level:].strip()
+    return HTMLNode(f"h{level}", None, text_to_children(content))
+
+def create_code_block(text):
+    code = text.strip().strip("```")
+    return HTMLNode("pre", None, [HTMLNode("code", None, [LeafNode(code)])])
+
+def create_quote(text):
+    lines = [line.strip("> ").strip() for line in text.split("\n")]
+    content = " ".join(lines)
+    return HTMLNode("blockquote", None, text_to_children(content))
+
+def create_unordered_list(text):
+    items = [line.strip("* ").strip("- ") for line in text.split("\n")]
+    children = [
+        HTMLNode("li", None, text_to_children(item))
+        for item in items
+    ]
+    return HTMLNode("ul", None, children)
+
+def create_ordered_list(text):
+    items = [line.split(". ", 1)[1] for line in text.split("\n")]
+    children = [
+        HTMLNode("li", None, text_to_children(item))
+        for item in items
+    ]
+    return HTMLNode("ol", None, children)
+
+def markdown_to_html_node(markdown):
+    """Convert a markdown document to a single HTMLNode"""
+    blocks = markdown_to_blocks(markdown)
+    children = []
+    
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        if block_type == "paragraph":
+            children.append(create_paragraph(block))
+        elif block_type == "heading":
+            children.append(create_heading(block))
+        elif block_type == "code":
+            children.append(create_code_block(block))
+        elif block_type == "quote":
+            children.append(create_quote(block))
+        elif block_type == "unordered_list":
+            children.append(create_unordered_list(block))
+        elif block_type == "ordered_list":
+            children.append(create_ordered_list(block))
+            
+    return HTMLNode("div", None, children)
