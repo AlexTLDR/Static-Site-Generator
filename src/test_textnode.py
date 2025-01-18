@@ -1,15 +1,7 @@
 import unittest
 
-from textnode import (
-    TextNode,
-    TextType,
-    split_nodes_delimiter,
-    text_node_to_html_node,
-    extract_markdown_images,
-    extract_markdown_links,
-    split_nodes_image,
-    split_nodes_link,
-)
+from textnode import *
+
 
 
 class TestTextNode(unittest.TestCase):
@@ -264,6 +256,88 @@ class TestTextNode(unittest.TestCase):
                 TextNode(" in it", TextType.TEXT),
             ]
         )
+
+def test_text_to_textnodes_empty(self):
+    nodes = text_to_textnodes("")
+    self.assertEqual(nodes, [TextNode("", TextType.TEXT)])
+
+def test_text_to_textnodes_plain_text(self):
+    nodes = text_to_textnodes("Just plain text")
+    self.assertEqual(nodes, [TextNode("Just plain text", TextType.TEXT)])
+
+def test_text_to_textnodes_bold_only(self):
+    nodes = text_to_textnodes("**bold text**")
+    self.assertEqual(nodes, [TextNode("bold text", TextType.BOLD)])
+
+def test_text_to_textnodes_multiple_bold(self):
+    nodes = text_to_textnodes("**first** normal **second**")
+    self.assertEqual(
+        nodes,
+        [
+            TextNode("first", TextType.BOLD),
+            TextNode(" normal ", TextType.TEXT),
+            TextNode("second", TextType.BOLD),
+        ]
+    )
+
+def test_text_to_textnodes_nested_formatting(self):
+    nodes = text_to_textnodes("**bold with *italic* inside**")
+    self.assertEqual(
+        nodes,
+        [
+            TextNode("bold with ", TextType.BOLD),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" inside", TextType.BOLD),
+        ]
+    )
+
+def test_text_to_textnodes_multiple_types(self):
+    nodes = text_to_textnodes("`code` *italic* **bold** [link](https://example.com)")
+    self.assertEqual(
+        nodes,
+        [
+            TextNode("code", TextType.CODE),
+            TextNode(" ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://example.com"),
+        ]
+    )
+
+def test_text_to_textnodes_images_and_links(self):
+    nodes = text_to_textnodes("![alt text](image.jpg) and [link text](https://example.com)")
+    self.assertEqual(
+        nodes,
+        [
+            TextNode("alt text", TextType.IMAGE, "image.jpg"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("link text", TextType.LINK, "https://example.com"),
+        ]
+    )
+
+def test_text_to_textnodes_complex_markdown(self):
+    text = """This is a **complex** test with
+    *italic*, `code`, ![image](test.png) and [link](https://test.com)
+    across multiple lines"""
+    nodes = text_to_textnodes(text)
+    self.assertEqual(
+        nodes,
+        [
+            TextNode("This is a ", TextType.TEXT),
+            TextNode("complex", TextType.BOLD),
+            TextNode(" test with\n    ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(", ", TextType.TEXT),
+            TextNode("code", TextType.CODE),
+            TextNode(", ", TextType.TEXT),
+            TextNode("image", TextType.IMAGE, "test.png"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://test.com"),
+            TextNode("\n    across multiple lines", TextType.TEXT),
+        ]
+    )
 
 
 
