@@ -358,6 +358,55 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         ]
     )
 
+def test_block_to_block_type(self):
+    self.assertEqual(block_to_block_type("# Heading"), "heading")
+    self.assertEqual(block_to_block_type("### Heading 3"), "heading")
+    
+    self.assertEqual(
+        block_to_block_type("```\ncode block\nmore code\n```"), 
+        "code"
+    )
+    
+    self.assertEqual(
+        block_to_block_type("> quote\n> more quote\n> final quote"), 
+        "quote"
+    )
+    
+    self.assertEqual(
+        block_to_block_type("* list item\n* another item\n* final item"), 
+        "unordered_list"
+    )
+    
+    self.assertEqual(
+        block_to_block_type("- list item\n- another item\n- final item"), 
+        "unordered_list"
+    )
+    
+    self.assertEqual(
+        block_to_block_type("1. first item\n2. second item\n3. third item"), 
+        "ordered_list"
+    )
+    
+    self.assertEqual(
+        block_to_block_type("Regular paragraph text with **bold** and *italic*"), 
+        "paragraph"
+    )
+
+def test_block_to_block_type_invalid_heading(self):
+    self.assertEqual(block_to_block_type("#Invalid heading"), "paragraph")
+    
+def test_block_to_block_type_invalid_ordered_list(self):
+    self.assertEqual(
+        block_to_block_type("1. first\n3. second\n4. third"), 
+        "paragraph"
+    )
+
+def test_block_to_block_type_mixed_list_markers(self):
+    self.assertEqual(
+        block_to_block_type("* first\n- second"), 
+        "unordered_list"
+    )
+
 
 
 if __name__ == "__main__":

@@ -140,3 +140,31 @@ def text_to_textnodes(text):
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
     return [block.strip() for block in blocks if block.strip()]
+
+def block_to_block_type(block):
+    # Check for heading - match 1-6 # followed by space
+    if block.startswith(("#", "##", "###", "####", "#####", "######")):
+        if block[block.find("#"):].startswith((" ")):
+            return "heading"
+            
+    # Check for code block - starts and ends with ```
+    if block.startswith("```") and block.endswith("```"):
+        return "code"
+        
+    # Check for quote block - every line starts with >
+    lines = block.split("\n")
+    if all(line.startswith(">") for line in lines):
+        return "quote"
+        
+    # Check for unordered list - every line starts with * or -
+    if all(line.strip().startswith(("* ", "- ")) for line in lines):
+        return "unordered_list"
+        
+    # Check for ordered list - lines start with number. space
+    if all(line.strip()[0].isdigit() and line.strip()[1:].startswith(". ") for line in lines):
+        numbers = [int(line.strip().split(".")[0]) for line in lines]
+        if numbers == list(range(1, len(numbers) + 1)):
+            return "ordered_list"
+            
+    # Default case - paragraph
+    return "paragraph"
