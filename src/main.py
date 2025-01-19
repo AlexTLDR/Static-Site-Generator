@@ -1,56 +1,49 @@
 import os
-import shutil
-from textnode import *
+from textnode import markdown_to_html_node, extract_title
 
-def copy_directory(src_dir, dst_dir):
-    if os.path.exists(dst_dir):
-        print(f"Removing existing directory: {dst_dir}")
-        shutil.rmtree(dst_dir)
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    print(f"\nScanning directory: {dir_path_content}")
     
-    print(f"Creating directory: {dst_dir}")
-    os.mkdir(dst_dir)
-    
-    for item in os.listdir(src_dir):
-        src_path = os.path.join(src_dir, item)
-        dst_path = os.path.join(dst_dir, item)
+    for entry in os.scandir(dir_path_content):
+        rel_path = os.path.relpath(entry.path, dir_path_content)
+        dest_path = os.path.join(dest_dir_path, rel_path)
         
-        if os.path.isfile(src_path):
-            print(f"Copying file: {src_path} -> {dst_path}")
-            shutil.copy(src_path, dst_path)
-        else:
-            print(f"Copying directory: {src_path} -> {dst_path}")
-            copy_directory(src_path, dst_path)
+        print(f"Entry path: {entry.path}")
+        print(f"Relative path: {rel_path}")
+        print(f"Destination path: {dest_path}")
+        
+        if entry.is_file() and entry.name.endswith('.md'):
+            print(f"Processing markdown file: {entry.path} -> {dest_path}")
+            dest_path = os.path.splitext(dest_path)[0] + '.html'
+            print(f"Final HTML path: {dest_path}")
+            
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            print(f"Creating directory: {os.path.dirname(dest_path)}")
+            
+            with open(entry.path) as f:
+                markdown_content = f.read()
+            with open(template_path) as f:
+                template = f.read()
+            
+            title = extract_title(markdown_content)
+            html_node = markdown_to_html_node(markdown_content)
+            html = template.replace("{{ Title }}", title).replace("{{ Content }}", html_node.to_html())
+            
+            with open(dest_path, 'w') as f:
+                f.write(html)
+            print(f"Written file: {dest_path}")
+                
+        elif entry.is_dir():
+            print(f"Entering directory: {entry.path}")
+            new_dest_path = os.path.join(dest_dir_path, rel_path)
+            generate_pages_recursive(entry.path, template_path, new_dest_path)
 
-def generate_page(from_path, template_path, dest_path):
-    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
-    
-    with open(from_path, 'r') as f:
-        markdown = f.read()
-    
-    with open(template_path, 'r') as f:
-        template = f.read()
-    
-    html = markdown_to_html_node(markdown).to_html()
-    title = extract_title(markdown)
-    
-    template = template.replace("{{ Title }}", title)
-    template = template.replace("{{ Content }}", html)
-    
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    
-    with open(dest_path, 'w') as f:
-        f.write(template)
 
 def main():
-    # Copy static files
-    copy_directory("static", "public")
-    
-    # Generate index page
-    generate_page(
-        "content/index.md",
-        "template.html",
-        "public/index.html"
-    )
+    os.makedirs("public", exist_ok=True)
+
+    generate_pages_recursive("content", "template.html", "public")
+
 
 if __name__ == "__main__":
     main()
