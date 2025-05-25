@@ -1,4 +1,4 @@
-# Contact Us
+# Contact the Author
 
 [Back Home](/)
 
@@ -9,7 +9,7 @@ We'd love to hear from you! Whether you have questions about Middle-earth lore, 
 ### Contact Information
 
 **Email**: contact@middle-earth-chronicles.com  
-**Phone**: (555) 123-4567  
+**Phone**: `555` 123-4567
 **Address**: 
 The Shire Post Office  
 Bag End, Hobbiton  
