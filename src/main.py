@@ -1,4 +1,5 @@
 import os
+import shutil
 from textnode import markdown_to_html_node, extract_title
 
 def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
@@ -39,8 +40,19 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             generate_pages_recursive(entry.path, template_path, new_dest_path)
 
 
+def copy_static_files(src_dir, dest_dir):
+    """Copy all static files from src_dir to dest_dir"""
+    if os.path.exists(dest_dir):
+        shutil.rmtree(dest_dir)
+    shutil.copytree(src_dir, dest_dir)
+    print(f"Copied static files from {src_dir} to {dest_dir}")
+
+
 def main():
     os.makedirs("public", exist_ok=True)
+    
+    # Copy static files first
+    copy_static_files("static", "public")
 
     generate_pages_recursive("content", "template.html", "public")
 
